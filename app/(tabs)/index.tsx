@@ -1,47 +1,32 @@
 import React, { useState } from 'react';
-import { Image, StyleSheet, Platform, View, Text, Button } from 'react-native';
+import { StyleSheet, View, Text, Button } from 'react-native';
 import Animated, { 
-    useSharedValue,
-    withSpring,
-    useAnimatedStyle,
-    withTiming,
-    withRepeat,
-    cancelAnimation, } from 'react-native-reanimated';
+  useSharedValue,
+  withTiming,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
 
 export default function HomeScreen() {
-  //movimiento
-  const height=3000
-  const offset = useSharedValue(height / 2 - 160);
+  // Animación de deslizamiento para el título
+  const translateY = useSharedValue(-100); // Comienza fuera de la pantalla, en la parte superior
+  const opacity = useSharedValue(1); // Inicialmente visible
 
-  const animatedStyles = useAnimatedStyle(() => ({
-    transform: [{ translateY: offset.value }],
-  }));
+  // Estilo animado para el título
+  const animatedTitleStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateY: translateY.value }],
+      opacity: opacity.value, // Aplica la opacidad animada
+    };
+  });
 
-  const startAnimation = () => {
-    offset.value = withRepeat(
-      withTiming(offset.value > 0 ? -height / 2 + 160 : height / 2 - 160, {
-        duration: 100,
-      }),
-      -1,
-      true
-    );
-  };
-
-  React.useEffect(() => {
-    startAnimation();
-  }, []);
-
-  const handleCancelAnimation = () => {
-    cancelAnimation(offset);
-  };
-  // desvanecimiento
-  const opacity = useSharedValue(1);
+  // Cambio de color de fondo y opacidad
   const [currentIndex, setCurrentIndex] = useState(0);
   const backgroundColors = ['#0fec95', '#ff6f61', '#6a0dad', '#ff4500'];
   const backgroundColor = useSharedValue(backgroundColors[currentIndex]);
 
   const handlePress = () => {
-    opacity.value = withSpring(opacity.value -0.10, { duration: 500 } );
+    opacity.value = withSpring(opacity.value - 0.30, { duration: 500 });
 
     const nextIndex = (currentIndex + 1) % backgroundColors.length;
     setCurrentIndex(nextIndex);
@@ -50,36 +35,29 @@ export default function HomeScreen() {
     backgroundColor.value = withSpring(backgroundColors[nextIndex], { duration: 500 });
   };
 
-  return (
+  // Iniciar animaciones cuando el componente se monte
+  React.useEffect(() => {
+    translateY.value = withTiming(0, { duration: 1000 }); // Desliza hacia abajo en 1 segundo
+    opacity.value = withTiming(1, { duration: 1000 }); // Aumenta la opacidad a 1 en 1 segundo
+  }, []);
 
-    <Animated.View style={{
-      backgroundColor,
-      flex: 1,
-      justifyContent: 'space-between',
-    }}>
-    
-      {/* titulo */}
-      <Animated.View style={{
-          opacity,
-          alignItems: 'center',
-          marginTop: 20,
-      }}>
+  const animatedContainerStyle = useAnimatedStyle(() => {
+    return {
+      backgroundColor: backgroundColor.value,
+    };
+  });
+
+  return (
+    <Animated.View style={[styles.container, animatedContainerStyle]}>
+      {/* Título con animación */}
+      <Animated.View style={[styles.titleContainer, animatedTitleStyle]}>
         <Text style={styles.title}>Bienvenido a mi página con animación</Text>
       </Animated.View>
 
-      {/* <Animated.View style={[styles.box, animatedStyles]} /> */}
-
-    <View style={styles.row}>
-    <Button title="Cancel animation" onPress={handleCancelAnimation} />
-
-    <Button title="Start animation" onPress={startAnimation} />
-    </View>
-
-    {/* boton */}
-    <View style={styles.buttonContainer}>
-      <Button  title="Iniciar" onPress={handlePress} />
-    </View>
-    
+      {/* Botón para cambiar el fondo */}
+      <View style={styles.buttonContainer}>
+        <Button title="Iniciar" onPress={handlePress} />
+      </View>
     </Animated.View>
   );
 }
@@ -88,39 +66,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'space-between',
-    backgroundColor: '#0fec95', 
   },
   titleContainer: {
     alignItems: 'center',
     marginTop: 20,
-    fontSize:90
   },
   title: {
-    fontSize: 44,
+    fontSize: 24,
     fontWeight: 'bold',
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  animatedBox: {
-    height: 100,
-    backgroundColor: 'violet',
   },
   buttonContainer: {
     alignItems: 'center',
     marginBottom: 20,
-  },
-  box: {
-    height: 120,
-    width: 120,
-    backgroundColor: '#b58df1',
-    borderRadius: 20,
-    marginBottom: 30,
-  },
-  row: {
-    flexDirection: 'row',
-    gap: 10,
   },
 });
